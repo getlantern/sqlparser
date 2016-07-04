@@ -58,6 +58,7 @@ var (
   when        *When
   orderBy     OrderBy
   order       *Order
+  timerange   *TimeRange
   limit       *Limit
   insRows     InsertRows
   updateExprs UpdateExprs
@@ -73,7 +74,7 @@ for CreateTable
 }
 
 %token LEX_ERROR
-%token <empty> SELECT INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT FOR
+%token <empty> SELECT INSERT UPDATE DELETE FROM ASOF UNTIL WHERE GROUP HAVING ORDER BY LIMIT FOR
 %token <empty> ALL DISTINCT AS EXISTS IN IS LIKE BETWEEN NULL ASC DESC VALUES INTO DUPLICATE KEY DEFAULT SET LOCK
 %token <bytes> ID STRING NUMBER VALUE_ARG LIST_ARG COMMENT
 %token <empty> LE GE NE NULL_SAFE_EQUAL
@@ -91,8 +92,8 @@ for CreateTable
 %left <empty> '&' '|' '^'
 %left <empty> '+' '-'
 %left <empty> '*' '/' '%'
-%nonassoc <empty> '.' 
-%left <empty> UNARY 
+%nonassoc <empty> '.'
+%left <empty> UNARY
 %right <empty> CASE WHEN THEN ELSE
 %left <empty> END
 
@@ -123,6 +124,7 @@ for CreateTable
 %type <indexHints> index_hint_list
 %type <bytes2> index_list
 %type <boolExpr> where_expression_opt
+%type <timerange> timerange
 %type <boolExpr> boolean_expression condition
 %type <str> compare
 %type <insRows> row_list
@@ -140,7 +142,7 @@ for CreateTable
 %type <when> when_expression
 %type <valExpr> value_expression_opt else_expression_opt
 %type <valExprs> group_by_opt
-%type <boolExpr> having_opt 
+%type <boolExpr> having_opt
 %type <orderBy> order_by_opt order_list
 %type <order> order
 %type <str> asc_desc_opt
@@ -199,9 +201,9 @@ command:
 | other_statement
 
 select_statement:
-  SELECT comment_opt distinct_opt select_expression_list FROM table_expression_list where_expression_opt group_by_opt having_opt order_by_opt limit_opt lock_opt
+  SELECT comment_opt distinct_opt select_expression_list FROM table_expression_list timerange where_expression_opt group_by_opt having_opt order_by_opt limit_opt lock_opt
   {
-    $$ = &Select{Comments: Comments($2), Distinct: $3, SelectExprs: $4, From: $6, Where: NewWhere(AST_WHERE, $7), GroupBy: GroupBy($8), Having: NewWhere(AST_HAVING, $9), OrderBy: $10, Limit: $11, Lock: $12}
+    $$ = &Select{Comments: Comments($2), Distinct: $3, SelectExprs: $4, From: $6, TimeRange: $7, Where: NewWhere(AST_WHERE, $8), GroupBy: GroupBy($9), Having: NewWhere(AST_HAVING, $10), OrderBy: $11, Limit: $12, Lock: $13}
   }
 | select_statement union_op select_statement %prec UNION
   {
@@ -309,7 +311,7 @@ char_type:
   }
 
 numeric_type:
-  int_type length_opt 
+  int_type length_opt
   {
     $$ = $1 + $2
   }
@@ -319,7 +321,7 @@ numeric_type:
   }
 
 int_type:
-  BIT 
+  BIT
   {
     $$ = AST_BIT
   }
@@ -391,7 +393,7 @@ length_opt:
   {
     $$ = ""
   }
-| '(' NUMBER ')'  
+| '(' NUMBER ')'
   {
     $$ = "(" + string($2) + ")"
   }
@@ -436,7 +438,7 @@ column_atts:
 
 key_att:
   primary_key
-  { 
+  {
     $$ = AST_PRIMARY_KEY
   }
 | unique_key
@@ -446,7 +448,7 @@ key_att:
 
 primary_key:
   PRIMARY KEY
-| KEY 
+| KEY
 
 unique_key:
   UNIQUE
@@ -457,7 +459,7 @@ column_definition:
   {
     $$ = &ColumnDefinition{ColName: string($1), ColType: $2, ColumnAtts: $3  }
   }
-  
+
 column_definition_list:
   column_definition
   {
@@ -469,9 +471,9 @@ column_definition_list:
   }
 
 create_table_statement:
-  CREATE TABLE not_exists_opt ID '(' column_definition_list  ')' 
+  CREATE TABLE not_exists_opt ID '(' column_definition_list  ')'
   {
-    $$ = &CreateTable{Name: $4, ColumnDefinitions: $6}  
+    $$ = &CreateTable{Name: $4, ColumnDefinitions: $6}
   }
 
 create_statement:
@@ -1131,6 +1133,16 @@ asc_desc_opt:
     $$ = AST_DESC
   }
 
+timerange:
+  ASOF STRING
+  {
+    $$ = &TimeRange{From: string($2)}
+  }
+| ASOF STRING UNTIL STRING
+  {
+    $$ = &TimeRange{From: string($2), To: string($4)}
+  }
+
 limit_opt:
   {
     $$ = nil
@@ -1236,7 +1248,7 @@ update_list:
 update_expression:
   column_name '=' value_expression
   {
-    $$ = &UpdateExpr{Name: $1, Expr: $3} 
+    $$ = &UpdateExpr{Name: $1, Expr: $3}
   }
 
 exists_opt:

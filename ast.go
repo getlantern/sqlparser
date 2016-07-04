@@ -80,6 +80,7 @@ type Select struct {
 	SelectExprs SelectExprs
 	From        TableExprs
 	Where       *Where
+	TimeRange   *TimeRange
 	GroupBy     GroupBy
 	Having      *Where
 	OrderBy     OrderBy
@@ -486,6 +487,22 @@ func (node *Where) Format(buf *TrackedBuffer) {
 		return
 	}
 	buf.Myprintf(" %s %v", node.Type, node.Expr)
+}
+
+// TimeRange represents a TIMERANGE clause.
+type TimeRange struct {
+	From, To string
+}
+
+func (node *TimeRange) Format(buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+	buf.Myprintf(" timerange ")
+	buf.Myprintf("%v", string(node.From))
+	if node.To != "" {
+		buf.Myprintf(", %v", string(node.To))
+	}
 }
 
 // Expr represents an expression.
