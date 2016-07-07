@@ -124,7 +124,7 @@ for CreateTable
 %type <indexHints> index_hint_list
 %type <bytes2> index_list
 %type <boolExpr> where_expression_opt
-%type <timerange> timerange
+%type <timerange> timerange_opt
 %type <boolExpr> boolean_expression condition
 %type <str> compare
 %type <insRows> row_list
@@ -201,7 +201,7 @@ command:
 | other_statement
 
 select_statement:
-  SELECT comment_opt distinct_opt select_expression_list FROM table_expression_list timerange where_expression_opt group_by_opt having_opt order_by_opt limit_opt lock_opt
+  SELECT comment_opt distinct_opt select_expression_list FROM table_expression_list timerange_opt where_expression_opt group_by_opt having_opt order_by_opt limit_opt lock_opt
   {
     $$ = &Select{Comments: Comments($2), Distinct: $3, SelectExprs: $4, From: $6, TimeRange: $7, Where: NewWhere(AST_WHERE, $8), GroupBy: GroupBy($9), Having: NewWhere(AST_HAVING, $10), OrderBy: $11, Limit: $12, Lock: $13}
   }
@@ -1133,8 +1133,11 @@ asc_desc_opt:
     $$ = AST_DESC
   }
 
-timerange:
-  ASOF STRING
+timerange_opt:
+{
+  $$ = nil
+}
+| ASOF STRING
   {
     $$ = &TimeRange{From: string($2)}
   }
