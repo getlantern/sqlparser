@@ -531,6 +531,7 @@ func (*BinaryExpr) IExpr()     {}
 func (*UnaryExpr) IExpr()      {}
 func (*FuncExpr) IExpr()       {}
 func (*CaseExpr) IExpr()       {}
+func (*StarExpr) IExpr()       {}
 
 // BoolExpr represents a boolean expression.
 type BoolExpr interface {
@@ -668,6 +669,7 @@ func (*BinaryExpr) IValExpr() {}
 func (*UnaryExpr) IValExpr()  {}
 func (*FuncExpr) IValExpr()   {}
 func (*CaseExpr) IValExpr()   {}
+func (*StarExpr) IValExpr()   {}
 
 // StrVal represents a string value.
 type StrVal []byte

@@ -905,7 +905,11 @@ value_expression_list:
   }
 
 value_expression:
-  value
+  '*'
+  {
+    $$ = &StarExpr{}
+  }
+| value
   {
     $$ = $1
   }
