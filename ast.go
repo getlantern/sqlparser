@@ -81,7 +81,7 @@ type Select struct {
 	From        TableExprs
 	Where       *Where
 	TimeRange   *TimeRange
-	GroupBy     GroupBy
+	GroupBy     SelectExprs
 	Having      *Where
 	OrderBy     OrderBy
 	Limit       *Limit
@@ -874,17 +874,6 @@ type When struct {
 
 func (node *When) Format(buf *TrackedBuffer) {
 	buf.Myprintf("when %v then %v", node.Cond, node.Val)
-}
-
-// GroupBy represents a GROUP BY clause.
-type GroupBy []ValExpr
-
-func (node GroupBy) Format(buf *TrackedBuffer) {
-	prefix := " group by "
-	for _, n := range node {
-		buf.Myprintf("%s%v", prefix, n)
-		prefix = ", "
-	}
 }
 
 // OrderBy represents an ORDER By clause.

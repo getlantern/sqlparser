@@ -141,7 +141,7 @@ for CreateTable
 %type <whens> when_expression_list
 %type <when> when_expression
 %type <valExpr> value_expression_opt else_expression_opt
-%type <valExprs> group_by_opt
+%type <selectExprs> group_by_opt
 %type <boolExpr> having_opt
 %type <orderBy> order_by_opt order_list
 %type <order> order
@@ -203,7 +203,7 @@ command:
 select_statement:
   SELECT comment_opt distinct_opt select_expression_list FROM table_expression_list timerange_opt where_expression_opt group_by_opt having_opt order_by_opt limit_opt lock_opt
   {
-    $$ = &Select{Comments: Comments($2), Distinct: $3, SelectExprs: $4, From: $6, TimeRange: $7, Where: NewWhere(AST_WHERE, $8), GroupBy: GroupBy($9), Having: NewWhere(AST_HAVING, $10), OrderBy: $11, Limit: $12, Lock: $13}
+    $$ = &Select{Comments: Comments($2), Distinct: $3, SelectExprs: $4, From: $6, TimeRange: $7, Where: NewWhere(AST_WHERE, $8), GroupBy: $9, Having: NewWhere(AST_HAVING, $10), OrderBy: $11, Limit: $12, Lock: $13}
   }
 | select_statement union_op select_statement %prec UNION
   {
@@ -1085,7 +1085,7 @@ group_by_opt:
   {
     $$ = nil
   }
-| GROUP BY value_expression_list
+| GROUP BY select_expression_list
   {
     $$ = $3
   }
