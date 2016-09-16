@@ -100,11 +100,12 @@ const (
 )
 
 func (node *Select) Format(buf *TrackedBuffer) {
-	buf.Myprintf("select %v%s%v from %v%v%v%v%v%v%s",
-		node.Comments, node.Distinct, node.SelectExprs,
-		node.From, node.Where,
-		node.GroupBy, node.Having, node.OrderBy,
-		node.Limit, node.Lock)
+	buf.Myprintf("select %v%s%v from %v%v", node.Comments, node.Distinct,
+		node.SelectExprs, node.From, node.Where)
+	if len(node.GroupBy) > 0 {
+		buf.Myprintf(" group by %v", node.GroupBy)
+	}
+	buf.Myprintf("%v%v%v%s", node.Having, node.OrderBy, node.Limit, node.Lock)
 }
 
 // Union represents a UNION statement.
