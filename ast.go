@@ -100,8 +100,8 @@ const (
 )
 
 func (node *Select) Format(buf *TrackedBuffer) {
-	buf.Myprintf("select %v%s%v from %v%v", node.Comments, node.Distinct,
-		node.SelectExprs, node.From, node.Where)
+	buf.Myprintf("select %v%s%v from %v%v%v", node.Comments, node.Distinct,
+		node.SelectExprs, node.From, node.TimeRange, node.Where)
 	if len(node.GroupBy) > 0 {
 		buf.Myprintf(" group by %v", node.GroupBy)
 	}
@@ -499,10 +499,9 @@ func (node *TimeRange) Format(buf *TrackedBuffer) {
 	if node == nil {
 		return
 	}
-	buf.Myprintf(" timerange ")
-	buf.Myprintf("%v", string(node.From))
+	buf.Myprintf(" ASOF '%s'", node.From)
 	if node.To != "" {
-		buf.Myprintf(", %v", string(node.To))
+		buf.Myprintf(" UNTIL '%s'", node.To)
 	}
 }
 
