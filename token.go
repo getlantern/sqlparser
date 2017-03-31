@@ -288,10 +288,7 @@ func (tkn *Tokenizer) scanIdentifier() (int, []byte) {
 func (tkn *Tokenizer) scanLiteralIdentifier() (int, []byte) {
 	buffer := bytes.NewBuffer(make([]byte, 0, 8))
 	buffer.WriteByte(byte(tkn.lastChar))
-	if !isLetter(tkn.lastChar) {
-		return LEX_ERROR, buffer.Bytes()
-	}
-	for tkn.next(); isLetter(tkn.lastChar) || isDigit(tkn.lastChar); tkn.next() {
+	for tkn.next(); tkn.lastChar != '`'; tkn.next() {
 		buffer.WriteByte(byte(tkn.lastChar))
 	}
 	if tkn.lastChar != '`' {
